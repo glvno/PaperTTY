@@ -639,27 +639,37 @@ class EPD7in5v2(WaveshareFull):
             return -1
         self.reset()
 
-        self.send_command(self.POWER_SETTING)
-        self.send_data(0x07) # VDS_EN, VDG_EN
-        self.send_data(0x07) # VCOM_HV, VGHL_LV[1], VGHL_LV[0]
-        self.send_data(0x3f) # VDH
-        self.send_data(0x3f) # VDL
-
-        self.send_command(self.POWER_ON)
+        self.send_command(0x06)     # btst
+        self.send_data(0x17)
+        self.send_data(0x17)
+        self.send_data(0x28)        # If an exception is displayed, try using 0x38
+        self.send_data(0x17)
+        self.send_command(0x01)			#POWER SETTING
+        self.send_data(0x07)
+        self.send_data(0x07)    #VGH=20V,VGL=-20V
+        self.send_data(0x3f)		#VDH=15V
+        self.send_data(0x3f)		#VDL=-15V
+        self.send_command(0x04) #POWER ON
+        self.delay_ms(100)
+        # self.ReadBusy()
         self.wait_until_idle()
-
-        self.send_command(self.PANEL_SETTING)
-        self.send_data(0x1f) # KW-3f   KWR-2F        BWROTP 0f       BWOTP 1f
-
-        self.send_command(0x15)
+        self.send_command(0X00)			#PANNEL SETTING
+        self.send_data(0x1F)   #KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+        self.send_command(0x61)        	#tres
+        self.send_data(0x03)		#source 800
+        self.send_data(0x20)
+        self.send_data(0x01)		#gate 480
+        self.send_data(0xE0)
+        self.send_command(0X15)
         self.send_data(0x00)
-
-        self.send_command(self.VCOM_AND_DATA_INTERVAL_SETTING)
+        self.send_command(0X50)			#VCOM AND DATA INTERVAL SETTING
         self.send_data(0x10)
         self.send_data(0x07)
-
-        self.send_command(self.TCON_SETTING)
+        self.send_command(0X60)			#TCON SETTING
         self.send_data(0x22)
+        # EPD hardware init end
+
+        # return 0
 
         print('Init finished.')
 
