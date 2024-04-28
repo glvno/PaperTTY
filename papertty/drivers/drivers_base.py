@@ -53,6 +53,7 @@ class SpiDev:
             self.spi = SPIDevice(pin_factory=factory)
             self.gpiozero = True
         except Exception as e:
+            print(e)
             print("Failed to init gpiozero spi device")
             self.spi = spidev.SpiDev(0, 0)
 
