@@ -669,7 +669,7 @@ class EPD7in5v2(WaveshareFull):
         self.send_data(0x22)
         # EPD hardware init end
 
-        # return 0
+        return 0
 
         print('Init finished.')
 
