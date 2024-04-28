@@ -15,6 +15,7 @@
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from abc import abstractmethod
+from . import epdconfig
 
 from papertty.drivers.drivers_base import WaveshareEPD
 
@@ -616,127 +617,251 @@ class EPD7in5(WaveshareFull):
         self.send_command(self.DEEP_SLEEP)
         self.send_data(0xa5)
 
-class EPD7in5v2(WaveshareFull):
-    """WaveShare 7.5" GDEW075T7 - monochrome"""
-
-    DATA_START_TRANSMISSION_2 = 0x13
-    LUT_WHITE_TO_WHITE = 0x21
-    LUT_BLACK_TO_WHITE = 0x22
-    LUT_WHITE_TO_BLACK = 0x23
-    LUT_BLACK_TO_BLACK = 0x24
-    READ_VCOM_VALUE = 0x81
-    # REVISION = 0x70
-    # SPI_FLASH_CONTROL = 0x65
-    # TCON_RESOLUTION = 0x61
-    TEMPERATURE_CALIBRATION = 0x41 # Assuming TEMPERATURE_SENSOR_SELECTION
-    VCM_DC_SETTING = 0x82
-
+class EPD7in5v2:
     def __init__(self):
-        super().__init__(name='7.5" v2 (GDEW075T7) BW', width=800, height=480)
+        self.reset_pin = epdconfig.RST_PIN
+        self.dc_pin = epdconfig.DC_PIN
+        self.busy_pin = epdconfig.BUSY_PIN
+        self.cs_pin = epdconfig.CS_PIN
+        self.width = EPD_WIDTH
+        self.height = EPD_HEIGHT
+    
+    # Hardware reset
+    def reset(self):
+        epdconfig.digital_write(self.reset_pin, 1)
+        epdconfig.delay_ms(20) 
+        epdconfig.digital_write(self.reset_pin, 0)
+        epdconfig.delay_ms(2)
+        epdconfig.digital_write(self.reset_pin, 1)
+        epdconfig.delay_ms(20)   
 
-    def init(self, **kwargs):
-        if self.epd_init() != 0:
-            print("epd_init not zero")
+    def send_command(self, command):
+        epdconfig.digital_write(self.dc_pin, 0)
+        epdconfig.digital_write(self.cs_pin, 0)
+        epdconfig.spi_writebyte([command])
+        epdconfig.digital_write(self.cs_pin, 1)
+
+    def send_data(self, data):
+        epdconfig.digital_write(self.dc_pin, 1)
+        epdconfig.digital_write(self.cs_pin, 0)
+        epdconfig.spi_writebyte([data])
+        epdconfig.digital_write(self.cs_pin, 1)
+
+    def send_data2(self, data):
+        epdconfig.digital_write(self.dc_pin, 1)
+        epdconfig.digital_write(self.cs_pin, 0)
+        epdconfig.SPI.writebytes2(data)
+        epdconfig.digital_write(self.cs_pin, 1)
+
+    def ReadBusy(self):
+        logger.debug("e-Paper busy")
+        self.send_command(0x71)
+        busy = epdconfig.digital_read(self.busy_pin)
+        while(busy == 0):
+            self.send_command(0x71)
+            busy = epdconfig.digital_read(self.busy_pin)
+        epdconfig.delay_ms(20)
+        logger.debug("e-Paper busy release")
+        
+    def init(self):
+        if (epdconfig.module_init() != 0):
             return -1
+        # EPD hardware init start
         self.reset()
-
+        
         self.send_command(0x06)     # btst
         self.send_data(0x17)
         self.send_data(0x17)
         self.send_data(0x28)        # If an exception is displayed, try using 0x38
         self.send_data(0x17)
-        self.send_command(0x01) #POWER SETTING
+        
+        self.send_command(0x01)			#POWER SETTING
         self.send_data(0x07)
         self.send_data(0x07)    #VGH=20V,VGL=-20V
-        self.send_data(0x3f)#VDH=15V
-        self.send_data(0x3f)#VDL=-15V
+        self.send_data(0x3f)		#VDH=15V
+        self.send_data(0x3f)		#VDL=-15V
+
         self.send_command(0x04) #POWER ON
-        self.delay_ms(100)
-        # self.ReadBusy()
-        self.wait_until_idle()
-        self.send_command(0X00)#PANNEL SETTING
-        self.send_data(0x1F)#KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
-        self.send_command(0x61)#tres
-        self.send_data(0x03)#source 800
+        epdconfig.delay_ms(100)
+        self.ReadBusy()
+
+        self.send_command(0X00)			#PANNEL SETTING
+        self.send_data(0x1F)   #KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+
+        self.send_command(0x61)        	#tres
+        self.send_data(0x03)		#source 800
         self.send_data(0x20)
-        self.send_data(0x01)#gate 480
+        self.send_data(0x01)		#gate 480
         self.send_data(0xE0)
+
         self.send_command(0X15)
         self.send_data(0x00)
-        self.send_command(0X50)#VCOM AND DATA INTERVAL SETTING
+
+        self.send_command(0X50)			#VCOM AND DATA INTERVAL SETTING
         self.send_data(0x10)
         self.send_data(0x07)
-        self.send_command(0X60)#TCON SETTING
-        self.send_data(0x22)
-        # EPD hardware init end
 
+        self.send_command(0X60)			#TCON SETTING
+        self.send_data(0x22)
+
+        # EPD hardware init end
+        return 0
+    
+    def init_fast(self):
+        if (epdconfig.module_init() != 0):
+            return -1
+        # EPD hardware init start
+        self.reset()
+        
+        self.send_command(0X00)			#PANNEL SETTING
+        self.send_data(0x1F)   #KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+
+        self.send_command(0X50)			#VCOM AND DATA INTERVAL SETTING
+        self.send_data(0x10)
+        self.send_data(0x07)
+
+        self.send_command(0x04) #POWER ON
+        epdconfig.delay_ms(100) 
+        self.ReadBusy()        #waiting for the electronic paper IC to release the idle signal
+
+        #Enhanced display drive(Add 0x06 command)
+        self.send_command(0x06)			#Booster Soft Start 
+        self.send_data (0x27)
+        self.send_data (0x27)   
+        self.send_data (0x18)		
+        self.send_data (0x17)		
+
+        self.send_command(0xE0)
+        self.send_data(0x02)
+        self.send_command(0xE5)
+        self.send_data(0x5A)
+
+        # EPD hardware init end
+        return 0
+    
+    def init_part(self):
+        if (epdconfig.module_init() != 0):
+            return -1
+        # EPD hardware init start
+        self.reset()
+
+        self.send_command(0X00)			#PANNEL SETTING
+        self.send_data(0x1F)   #KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+
+        self.send_command(0x04) #POWER ON
+        epdconfig.delay_ms(100) 
+        self.ReadBusy()        #waiting for the electronic paper IC to release the idle signal
+
+        self.send_command(0xE0)
+        self.send_data(0x02)
+        self.send_command(0xE5)
+        self.send_data(0x6E)
+
+        # EPD hardware init end
         return 0
 
-        print('Init finished.')
+    def getbuffer(self, image):
+        img = image
+        imwidth, imheight = img.size
+        if(imwidth == self.width and imheight == self.height):
+            img = img.convert('1')
+        elif(imwidth == self.height and imheight == self.width):
+            # image has correct dimensions, but needs to be rotated
+            img = img.rotate(90, expand=True).convert('1')
+        else:
+            logger.warning("Wrong image dimensions: must be " + str(self.width) + "x" + str(self.height))
+            # return a blank buffer
+            return [0x00] * (int(self.width/8) * self.height)
 
-    def display_frame(self, frame_buffer, *args):
-        if frame_buffer:
-            self.send_command(self.DATA_START_TRANSMISSION_1)
-            self.delay_ms(2)
-            for i in range(0, int(self.width * self.height / 8)):
-                self.send_data(0xFF)
-            self.delay_ms(2)
-            self.send_command(self.DATA_START_TRANSMISSION_2)
-            self.delay_ms(2)
-            for i in range(0, int(self.width * self.height / 8)):
-                self.send_data(~frame_buffer[i])
-            self.delay_ms(2)
+        buf = bytearray(img.tobytes('raw'))
+        # The bytes need to be inverted, because in the PIL world 0=black and 1=white, but
+        # in the e-paper world 0=white and 1=black.
+        for i in range(len(buf)):
+            buf[i] ^= 0xFF
+        return buf
 
-            self.send_command(self.DISPLAY_REFRESH)
-            self.delay_ms(100)
-            self.wait_until_idle()
+    def display(self, image):
+        if(self.width % 8 == 0):
+            Width = self.width // 8
+        else:
+            Width = self.width // 8 +1
+        Height = self.height
+        image1 = [0xFF] * int(self.width * self.height / 8)
+        for j in range(Height):
+                for i in range(Width):
+                    image1[i + j * Width] = ~image[i + j * Width]
+        self.send_command(0x10)
+        self.send_data2(image1)
+
+        self.send_command(0x13)
+        self.send_data2(image)
+
+        self.send_command(0x12)
+        epdconfig.delay_ms(100)
+        self.ReadBusy()
+
+    def Clear(self):
+        self.send_command(0x10)
+        self.send_data2([0xFF] * int(self.width * self.height / 8))
+        self.send_command(0x13)
+        self.send_data2([0x00] * int(self.width * self.height / 8))
+
+        self.send_command(0x12)
+        epdconfig.delay_ms(100)
+        self.ReadBusy()
+
+    def display_Partial(self, Image, Xstart, Ystart, Xend, Yend):
+        if((Xstart % 8 + Xend % 8 == 8 & Xstart % 8 > Xend % 8) | Xstart % 8 + Xend % 8 == 0 | (Xend - Xstart)%8 == 0):
+            Xstart = Xstart // 8 * 8
+            Xend = Xend // 8 * 8
+        else:
+            Xstart = Xstart // 8 * 8
+            if Xend % 8 == 0:
+                Xend = Xend // 8 * 8
+            else:
+                Xend = Xend // 8 * 8 + 1
+                
+        Width = (Xend - Xstart) // 8
+        Height = Yend - Ystart
+	
+        self.send_command(0x50)
+        self.send_data(0xA9)
+        self.send_data(0x07)
+
+        self.send_command(0x91)		#This command makes the display enter partial mode
+        self.send_command(0x90)		#resolution setting
+        self.send_data (Xstart//256)
+        self.send_data (Xstart%256)   #x-start    
+
+        self.send_data ((Xend-1)//256)		
+        self.send_data ((Xend-1)%256)  #x-end	
+
+        self.send_data (Ystart//256)  #
+        self.send_data (Ystart%256)   #y-start    
+
+        self.send_data ((Yend-1)//256)		
+        self.send_data ((Yend-1)%256)  #y-end
+        self.send_data (0x01)
+
+        image1 = [0xFF] * int(self.width * self.height / 8)
+        for j in range(Height):
+                for i in range(Width):
+                    image1[i + j * Width] = ~Image[i + j * Width]
+
+        self.send_command(0x13)   #Write Black and White image to RAM
+        self.send_data2(image1)
+
+        self.send_command(0x12)
+        epdconfig.delay_ms(100)
+        self.ReadBusy()
 
     def sleep(self):
-        '''
-        After this command is transmitted, the chip would enter the
-        deep-sleep mode to save power.
-        The deep sleep mode would return to standby by hardware reset.
-        The only one parameter is a check code, the command would be
-        executed if check code = 0xA5.
-        You can use Epd::Reset() to awaken or Epd::Init() to initialize
-        '''
-
-        self.send_command(self.POWER_OFF)
-        self.wait_until_idle()
-        self.send_command(self.DEEP_SLEEP)
-        self.send_data(0xA5)
-
-    def reset(self):
-        """
-        Mirroring behaviour in reference implementation:
-        https://github.com/waveshare/e-Paper/blob/702def06bcb75983c98b0f9d25d43c552c248eb0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5_V2.py#L48-L54
-
-        The earlier implementation of `reset` inherited from `WaveshareFull` did not work with some units
-        (`init` hanged at `wait_until_idle` after the `POWER_ON` command was sent).
-
-        A quick scan of the other implementations indicates that the reset varies across devices (it's unclear
-        whether there is good reason for device specific differences or if the developer was just being inconsistent...)
-        e.g. significantly different delay times:
-        https://github.com/waveshare/e-Paper/blob/702def06bcb75983c98b0f9d25d43c552c248eb0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd1in54c.py#L46-L52
-        """
-        # Deliberately importing here to achieve same fail-on-use import behaviour as in `drivers_base.py`
-        import RPi.GPIO as GPIO
-
-        self.digital_write(self.RST_PIN, GPIO.HIGH)
-        self.delay_ms(200)
-        self.digital_write(self.RST_PIN, GPIO.LOW)
-        self.delay_ms(2)
-        self.digital_write(self.RST_PIN, GPIO.HIGH)
-        self.delay_ms(200)
-
-    def wait_until_idle(self):
-        """
-        Mirroring behaviour in reference implementation (i.e. differently to other implementations, we send command 0x71
-        and poll without sleep):
-        https://github.com/waveshare/e-Paper/blob/702def06bcb75983c98b0f9d25d43c552c248eb0/RaspberryPi%26JetsonNano/python/lib/waveshare_epd/epd7in5_V2.py#L68-L75
-        """
-        self.send_command(0x71)
-        while self.digital_read(self.BUSY_PIN) == 0:  # 0: busy, 1: idle
-            print("busy")
-            self.delay_ms(20)
-            self.send_command(0x71)
+        self.send_command(0x02) # POWER_OFF
+        self.ReadBusy()
+        
+        self.send_command(0x07) # DEEP_SLEEP
+        self.send_data(0XA5)
+        
+        epdconfig.delay_ms(2000)
+        epdconfig.module_exit()
+### END OF FILE ###
