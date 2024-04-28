@@ -52,25 +52,6 @@ files = [
 ]
 
 [[package]]
-name = "colorzero"
-version = "2.0"
-description = "Yet another Python color library"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "colorzero-2.0-py2.py3-none-any.whl", hash = "sha256:0e60d743a6b8071498a56465f7719c96a5e92928f858bab1be2a0d606c9aa0f8"},
-    {file = "colorzero-2.0.tar.gz", hash = "sha256:e7d5a5c26cd0dc37b164ebefc609f388de24f8593b659191e12d85f8f9d5eb58"},
-]
-
-[package.dependencies]
-setuptools = "*"
-
-[package.extras]
-doc = ["pkginfo", "sphinx", "sphinx-rtd-theme"]
-test = ["pytest", "pytest-cov"]
-
-[[package]]
 name = "constantly"
 version = "23.10.4"
 description = "Symbolic constants in Python"
@@ -81,25 +62,6 @@ files = [
     {file = "constantly-23.10.4-py3-none-any.whl", hash = "sha256:3fd9b4d1c3dc1ec9757f3c52aef7e53ad9323dbe39f51dfd4c43853b68dfa3f9"},
     {file = "constantly-23.10.4.tar.gz", hash = "sha256:aa92b70a33e2ac0bb33cd745eb61776594dc48764b06c35e0efd050b7f1c7cbd"},
 ]
-
-[[package]]
-name = "gpiozero"
-version = "2.0"
-description = "A simple interface to GPIO devices with Raspberry Pi"
-category = "main"
-optional = false
-python-versions = "*"
-files = [
-    {file = "gpiozero-2.0-py3-none-any.whl", hash = "sha256:a103ff70c96f333841480fe1b1dbb8bc869438805ed291bf0b8bf7c95d3b915d"},
-    {file = "gpiozero-2.0.tar.gz", hash = "sha256:403bcc9e7f24f0877653e7fced91ba51508d5197c9d1f80e383fe6693b9c3c27"},
-]
-
-[package.dependencies]
-colorzero = "*"
-
-[package.extras]
-doc = ["sphinx", "sphinx-rtd-theme"]
-test = ["pytest", "pytest-cov"]
 
 [[package]]
 name = "hyperlink"
@@ -425,5 +387,5 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "2.0"
-python-versions = "3.8.12"
-content-hash = "a3fccdfed912964009cac71a0e089d10781e7a1109009aae88233553f893acb0"
+python-versions = "3.9.19"
+content-hash = "b7ff6828b863aaebcb872f1db819774578d145aaa5ef496b463c724cd88075e8"

@@ -636,6 +636,7 @@ class EPD7in5v2(WaveshareFull):
 
     def init(self, **kwargs):
         if self.epd_init() != 0:
+            print("epd_init not zero")
             return -1
         self.reset()
 
@@ -644,28 +645,28 @@ class EPD7in5v2(WaveshareFull):
         self.send_data(0x17)
         self.send_data(0x28)        # If an exception is displayed, try using 0x38
         self.send_data(0x17)
-        self.send_command(0x01)			#POWER SETTING
+        self.send_command(0x01) #POWER SETTING
         self.send_data(0x07)
         self.send_data(0x07)    #VGH=20V,VGL=-20V
-        self.send_data(0x3f)		#VDH=15V
-        self.send_data(0x3f)		#VDL=-15V
+        self.send_data(0x3f)#VDH=15V
+        self.send_data(0x3f)#VDL=-15V
         self.send_command(0x04) #POWER ON
         self.delay_ms(100)
         # self.ReadBusy()
         self.wait_until_idle()
-        self.send_command(0X00)			#PANNEL SETTING
-        self.send_data(0x1F)   #KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
-        self.send_command(0x61)        	#tres
-        self.send_data(0x03)		#source 800
+        self.send_command(0X00)#PANNEL SETTING
+        self.send_data(0x1F)#KW-3f   KWR-2F	BWROTP 0f	BWOTP 1f
+        self.send_command(0x61)#tres
+        self.send_data(0x03)#source 800
         self.send_data(0x20)
-        self.send_data(0x01)		#gate 480
+        self.send_data(0x01)#gate 480
         self.send_data(0xE0)
         self.send_command(0X15)
         self.send_data(0x00)
-        self.send_command(0X50)			#VCOM AND DATA INTERVAL SETTING
+        self.send_command(0X50)#VCOM AND DATA INTERVAL SETTING
         self.send_data(0x10)
         self.send_data(0x07)
-        self.send_command(0X60)			#TCON SETTING
+        self.send_command(0X60)#TCON SETTING
         self.send_data(0x22)
         # EPD hardware init end
 
@@ -736,5 +737,6 @@ class EPD7in5v2(WaveshareFull):
         """
         self.send_command(0x71)
         while self.digital_read(self.BUSY_PIN) == 0:  # 0: busy, 1: idle
+            print("busy")
             self.delay_ms(20)
             self.send_command(0x71)

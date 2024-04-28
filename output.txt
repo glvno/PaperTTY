@@ -1,0 +1,6 @@
+/home/mg/.cache/pypoetry/virtualenvs/papertty-m6WpQCRR-py3.8/lib/python3.8/site-packages/gpiozero/devices.py:295: PinFactoryFallback: Falling back from lgpio: No module named 'lgpio'
+  warnings.warn(
+
+Aborted!
+gpiozero found - using that instead of RPi.GPIO
+Loading PIL font /home/mg/PaperTTY/papertty/resources/tom-thumb.pil. Font size is ignored.
