@@ -12,6 +12,7 @@ click = "^7.1.2"
 Pillow = "7.1.2"
 python = "3.8.12"
 "RPi.GPIO" = "^0.7.0"
+gpiozero = "^2.0"
 spidev = "^3.4"
 vncdotool = "^1.0.0"
 
